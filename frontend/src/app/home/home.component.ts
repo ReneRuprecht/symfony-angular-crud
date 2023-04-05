@@ -7,6 +7,8 @@ import { HomeService } from './service/home.service';
   styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent implements OnInit {
+  title = '';
+
   ngOnInit(): void {
     this.homeService.getHomeResponseFromBackend().subscribe({
       next: (data: any) => (this.title = data.message || 'title not found'),
@@ -14,5 +16,4 @@ export class HomeComponent implements OnInit {
     });
   }
   constructor(private homeService: HomeService) {}
-  title = '';
 }
