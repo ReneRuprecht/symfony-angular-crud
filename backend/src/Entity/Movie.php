@@ -47,4 +47,13 @@ class Movie
 
         return $this;
     }
+
+    public function asArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'title' => $this->title,
+            'description' => $this->description
+        ];
+    }
 }

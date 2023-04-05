@@ -13,6 +13,13 @@ use Symfony\Component\HttpFoundation\Response;
 #[Route(path: '/api/v1/movie', name: 'movie')]
 class MovieController extends AbstractController
 {
+
+    private $em;
+    public function __construct(EntityManagerInterface $em)
+    {
+        $this->em = $em;
+    }
+
     #[Route('', name: 'app_movie', methods: ['GET', 'HEAD'])]
     public function index(): JsonResponse
     {
@@ -22,8 +29,20 @@ class MovieController extends AbstractController
         ]);
     }
 
+    #[Route('/{id}', name: 'app_movie', methods: ['GET'])]
+    public function getMovieById(int $id): Response
+    {
+        $movie = $this->em->getRepository(Movie::class)->find($id);
+        if (!$movie) {
+            return new Response("No movie with id: " . $id . " found", 404);
+        }
+        return new JsonResponse($movie->asArray(), 200);
+    }
+
+
+
     #[Route("", name: "create_movie", methods: ["POST"])]
-    public function create(Request $request, EntityManagerInterface $entityManager)
+    public function create(Request $request)
     {
         $data = json_decode($request->getContent(), true);
 
@@ -34,8 +53,8 @@ class MovieController extends AbstractController
         $movie = new Movie();
         $movie->setTitle($data['title']);
         $movie->setDescription($data['desc']);
-        $entityManager->persist($movie);
-        $entityManager->flush();
+        $this->em->persist($movie);
+        $this->em->flush();
 
         return new Response('Saved new movie with id ' . $movie->getId());
     }
