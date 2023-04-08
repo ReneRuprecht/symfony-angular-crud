@@ -20,7 +20,7 @@ class MovieController extends AbstractController
         $this->em = $em;
     }
 
-    #[Route('', name: 'app_movie', methods: ['GET', 'HEAD'])]
+    #[Route('', name: 'initial_movie', methods: ['GET', 'HEAD'])]
     public function index(): JsonResponse
     {
         return $this->json([
@@ -29,15 +29,41 @@ class MovieController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}', name: 'app_movie', methods: ['GET'])]
+    #[Route('/{id}', name: 'getById_movie', methods: ['GET'])]
     public function getMovieById(int $id): Response
     {
         $movie = $this->em->getRepository(Movie::class)->find($id);
-        if (!$movie) {
-            return new Response("No movie with id: " . $id . " found", 404);
-        }
+
+        if (!$movie) return new Response("No movie with id: " . $id . " found", 404);
+
         return new JsonResponse($movie->asArray(), 200);
     }
+
+
+    #[Route('/update', name: 'update_movie', methods: ['PUT'])]
+    public function updateMovie(Request $request): Response
+    {
+        $requestJson = json_decode($request->getContent(), true);
+
+        if (!isset($requestJson['id'])) return new Response("Movie id must be present");
+
+        if (!isset($requestJson['movie'])) return new Response("No movie data to update");
+
+        $movieData = $requestJson['movie'];
+
+        $movie = $this->em->getRepository(Movie::class)->find($requestJson['id']);
+
+        if (!isset($movie)) return new Response("No movie with id: " . $requestJson['id'] . " found");
+
+        if (isset($movieData['title'])) $movie->setTitle($movieData['title']);
+
+        if (isset($movieData['desc'])) $movie->setDescription($movieData['desc']);
+
+        $this->em->flush();
+
+        return new Response("put: " . $movieData['title']);
+    }
+
 
 
 
@@ -46,9 +72,7 @@ class MovieController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
-        if (!isset($data['title']) || !isset($data['desc'])) {
-            return new Response("Missing parameters", 422);
-        }
+        if (!isset($data['title']) || !isset($data['desc'])) return new Response("Missing parameters", 422);
 
         $movie = new Movie();
         $movie->setTitle($data['title']);
